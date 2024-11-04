@@ -43,7 +43,7 @@ spec:
         extraArgs:
           cloud-provider: gce
           feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-        timeoutForControlPlane: 20m
+        timeoutForControlPlane: 20m0s
       controllerManager:
         extraArgs:
           allocate-node-cidrs: "true"
@@ -144,7 +144,7 @@ spec:
   options:
     waitForJobs: true
     wait: true
-    timeout: 5m
+    timeout: 5m0s
     install:
       createNamespace: true
 ---
@@ -161,7 +161,7 @@ spec:
   options:
     waitForJobs: true
     wait: true
-    timeout: 5m
+    timeout: 5m0s
     install:
       createNamespace: true
   valuesTemplate: |
