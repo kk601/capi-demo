@@ -3,6 +3,9 @@ kind: Cluster
 metadata:
   name: capi-quickstart
   namespace: default
+  labels:
+    argoCDChart: enabled
+    guestbook: enabled
 spec:
   clusterNetwork:
     pods:
@@ -126,3 +129,71 @@ spec:
             cloud-provider: gce
             feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
           name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: argocd
+spec:
+  clusterSelector:
+    matchLabels:
+      argoCDChart: enabled
+  repoURL: https://argoproj.github.io/argo-helm
+  chartName: argo-cd
+  namespace: argocd
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m
+    install:
+      createNamespace: true
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: argocdguestbook
+spec:
+  clusterSelector:
+    matchLabels:
+      guestbook: enabled
+  repoURL: https://argoproj.github.io/argo-helm
+  chartName: argocd-apps
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m
+    install:
+      createNamespace: true
+  valuesTemplate: |
+    applications:
+      guestbook:
+        namespace: argocd
+        additionalLabels: {}
+        additionalAnnotations: {}
+        finalizers:
+        - resources-finalizer.argocd.argoproj.io
+        project: default
+        source:
+          repoURL: https://github.com/argoproj/argocd-example-apps.git
+          targetRevision: HEAD
+          path: guestbook
+          directory:
+            recurse: true
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: guestbook
+        syncPolicy:
+          automated:
+            prune: false
+            selfHeal: false
+          syncOptions:
+          - CreateNamespace=true
+        revisionHistoryLimit: null
+        ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+          - /spec/replicas
+        info:
+        - name: url
+          value: https://argoproj.github.io/
