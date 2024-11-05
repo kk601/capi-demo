@@ -19,6 +19,8 @@ spec:
         configSecret:
           name: credentials-secret
           namespace: capi-operator-system
+      valueFiles:
+      - values.yaml
   destination:
     server: "https://kubernetes.default.svc"
     namespace: capi-operator-system
