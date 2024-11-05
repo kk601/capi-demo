@@ -1,199 +1,194 @@
-# apiVersion: cluster.x-k8s.io/v1beta1
-# kind: Cluster
-# metadata:
-#   name: capi-quickstart
-#   namespace: default
-#   labels:
-#     argoCDChart: enabled
-#     guestbook: enabled
-# spec:
-#   clusterNetwork:
-#     pods:
-#       cidrBlocks:
-#       - 192.168.0.0/16
-#   controlPlaneRef:
-#     apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-#     kind: KubeadmControlPlane
-#     name: capi-quickstart-control-plane
-#   infrastructureRef:
-#     apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-#     kind: GCPCluster
-#     name: capi-quickstart
-# ---
-# apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-# kind: GCPCluster
-# metadata:
-#   name: capi-quickstart
-#   namespace: default
-# spec:
-#   network:
-#     name: default
-#   project: dev-gcp-423814
-#   region: europe-central2
-# ---
-# apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-# kind: KubeadmControlPlane
-# metadata:
-#   name: capi-quickstart-control-plane
-#   namespace: default
-# spec:
-#   kubeadmConfigSpec:
-#     clusterConfiguration:
-#       apiServer:
-#         extraArgs:
-#           cloud-provider: gce
-#           feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-#         timeoutForControlPlane: 20m0s
-#       controllerManager:
-#         extraArgs:
-#           allocate-node-cidrs: "true"
-#           cloud-provider: gce
-#           feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-#     initConfiguration:
-#       nodeRegistration:
-#         kubeletExtraArgs:
-#           cloud-provider: gce
-#           feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-#         name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
-#     joinConfiguration:
-#       nodeRegistration:
-#         kubeletExtraArgs:
-#           cloud-provider: gce
-#           feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-#         name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
-#   machineTemplate:
-#     infrastructureRef:
-#       apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-#       kind: GCPMachineTemplate
-#       name: capi-quickstart-control-plane
-#   replicas: 3
-#   version: v1.30.5
-# ---
-# apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-# kind: GCPMachineTemplate
-# metadata:
-#   name: capi-quickstart-control-plane
-#   namespace: default
-# spec:
-#   template:
-#     spec:
-#       image: projects/dev-gcp-423814/global/images/cluster-api-ubuntu-2404-v1-30-5-1730663278
-#       instanceType: n1-standard-2
-# ---
-# apiVersion: cluster.x-k8s.io/v1beta1
-# kind: MachineDeployment
-# metadata:
-#   name: capi-quickstart-md-0
-#   namespace: default
-# spec:
-#   clusterName: capi-quickstart
-#   replicas: 3
-#   selector:
-#     matchLabels: null
-#   template:
-#     spec:
-#       bootstrap:
-#         configRef:
-#           apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-#           kind: KubeadmConfigTemplate
-#           name: capi-quickstart-md-0
-#       clusterName: capi-quickstart
-#       infrastructureRef:
-#         apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-#         kind: GCPMachineTemplate
-#         name: capi-quickstart-md-0
-#       version: v1.30.5
-# ---
-# apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
-# kind: GCPMachineTemplate
-# metadata:
-#   name: capi-quickstart-md-0
-#   namespace: default
-# spec:
-#   template:
-#     spec:
-#       image: projects/dev-gcp-423814/global/images/cluster-api-ubuntu-2404-v1-30-5-1730663278
-#       instanceType: n1-standard-2
-# ---
-# apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
-# kind: KubeadmConfigTemplate
-# metadata:
-#   name: capi-quickstart-md-0
-#   namespace: default
-# spec:
-#   template:
-#     spec:
-#       joinConfiguration:
-#         nodeRegistration:
-#           kubeletExtraArgs:
-#             cloud-provider: gce
-#             feature-gates: "DisableCloudProviders=false,DisableKubeletCloudCredentialProviders=false"
-#           name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
-# ---
-# apiVersion: addons.cluster.x-k8s.io/v1alpha1
-# kind: HelmChartProxy
-# metadata:
-#   name: argocd
-# spec:
-#   clusterSelector:
-#     matchLabels:
-#       argoCDChart: enabled
-#   repoURL: https://argoproj.github.io/argo-helm
-#   chartName: argo-cd
-#   namespace: argocd
-#   options:
-#     waitForJobs: true
-#     wait: true
-#     timeout: 5m0s
-#     install:
-#       createNamespace: true
-# ---
-# apiVersion: addons.cluster.x-k8s.io/v1alpha1
-# kind: HelmChartProxy
-# metadata:
-#   name: argocdguestbook
-# spec:
-#   clusterSelector:
-#     matchLabels:
-#       guestbook: enabled
-#   repoURL: https://argoproj.github.io/argo-helm
-#   chartName: argocd-apps
-#   options:
-#     waitForJobs: true
-#     wait: true
-#     timeout: 5m0s
-#     install:
-#       createNamespace: true
-#   valuesTemplate: |
-#     applications:
-#       guestbook:
-#         namespace: argocd
-#         additionalLabels: {}
-#         additionalAnnotations: {}
-#         finalizers:
-#         - resources-finalizer.argocd.argoproj.io
-#         project: default
-#         source:
-#           repoURL: https://github.com/argoproj/argocd-example-apps.git
-#           targetRevision: HEAD
-#           path: guestbook
-#           directory:
-#             recurse: true
-#         destination:
-#           server: https://kubernetes.default.svc
-#           namespace: guestbook
-#         syncPolicy:
-#           automated:
-#             prune: false
-#             selfHeal: false
-#           syncOptions:
-#           - CreateNamespace=true
-#         revisionHistoryLimit: null
-#         ignoreDifferences:
-#         - group: apps
-#           kind: Deployment
-#           jsonPointers:
-#           - /spec/replicas
-#         info:
-#         - name: url
-#           value: https://argoproj.github.io/
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: capi-quickstart
+  namespace: default
+  labels:
+    argoCDChart: enabled
+    guestbook: enabled
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: capi-quickstart-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: GCPCluster
+    name: capi-quickstart
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: GCPCluster
+metadata:
+  name: capi-quickstart
+  namespace: default
+spec:
+  network:
+    name: default
+  project: dev-gcp-423814
+  region: europe-central2
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: capi-quickstart-control-plane
+  namespace: default
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: external
+        timeoutForControlPlane: 20m0s
+      controllerManager:
+        extraArgs:
+          allocate-node-cidrs: "true"
+          cloud-provider: external
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: external
+        name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      kind: GCPMachineTemplate
+      name: capi-quickstart-control-plane
+  replicas: 3
+  version: v1.30.5
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: GCPMachineTemplate
+metadata:
+  name: capi-quickstart-control-plane
+  namespace: default
+spec:
+  template:
+    spec:
+      image: projects/dev-gcp-423814/global/images/cluster-api-ubuntu-2404-v1-30-5-1730663278
+      instanceType: n1-standard-2
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: capi-quickstart-md-0
+  namespace: default
+spec:
+  clusterName: capi-quickstart
+  replicas: 3
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: capi-quickstart-md-0
+      clusterName: capi-quickstart
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: GCPMachineTemplate
+        name: capi-quickstart-md-0
+      version: v1.30.5
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: GCPMachineTemplate
+metadata:
+  name: capi-quickstart-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      image: projects/dev-gcp-423814/global/images/cluster-api-ubuntu-2404-v1-30-5-1730663278
+      instanceType: n1-standard-2
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: capi-quickstart-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: external
+          name: '{{ ds.meta_data.local_hostname.split(".")[0] }}'
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: argocd
+spec:
+  clusterSelector:
+    matchLabels:
+      argoCDChart: enabled
+  repoURL: https://argoproj.github.io/argo-helm
+  chartName: argo-cd
+  namespace: argocd
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m0s
+    install:
+      createNamespace: true
+---
+apiVersion: addons.cluster.x-k8s.io/v1alpha1
+kind: HelmChartProxy
+metadata:
+  name: argocdguestbook
+spec:
+  clusterSelector:
+    matchLabels:
+      guestbook: enabled
+  repoURL: https://argoproj.github.io/argo-helm
+  chartName: argocd-apps
+  options:
+    waitForJobs: true
+    wait: true
+    timeout: 5m0s
+    install:
+      createNamespace: true
+  valuesTemplate: |
+    applications:
+      guestbook:
+        namespace: argocd
+        additionalLabels: {}
+        additionalAnnotations: {}
+        finalizers:
+        - resources-finalizer.argocd.argoproj.io
+        project: default
+        source:
+          repoURL: https://github.com/argoproj/argocd-example-apps.git
+          targetRevision: HEAD
+          path: guestbook
+          directory:
+            recurse: true
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: guestbook
+        syncPolicy:
+          automated:
+            prune: false
+            selfHeal: false
+          syncOptions:
+          - CreateNamespace=true
+        revisionHistoryLimit: null
+        ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+          - /spec/replicas
+        info:
+        - name: url
+          value: https://argoproj.github.io/
