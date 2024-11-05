@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: 
+  namespace: argocd
+spec:
+  project: default
+  source:
+    chart: capi-operator/cluster-api-operator
+    repoURL: https://kubernetes-sigs.github.io/cluster-api-operator
+    targetRevision: 1.16.1
+    helm:
+      releaseName: sealed-secrets
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: kubeseal
