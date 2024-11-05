@@ -1,34 +1,34 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: capi-operator
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io/background
-spec:
-  project: default
-  source:
-    chart: cluster-api-operator
-    repoURL: https://kubernetes-sigs.github.io/cluster-api-operator
-    targetRevision: 0.14.0
-    helm:
-      releaseName: capi-operator
-      valuesObject:
-        infrastructure: "gcp"
-        addon: helm
-        cert-manager:
-          enabled: "true"
-        configSecret:
-          name: credentials-secret
-          namespace: capi-operator-system
-      valueFiles:
-      - values.yaml
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: capi-operator-system
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: capi-operator
+#   namespace: argocd
+#   finalizers:
+#     - resources-finalizer.argocd.argoproj.io/background
+# spec:
+#   project: default
+#   source:
+#     chart: cluster-api-operator
+#     repoURL: https://kubernetes-sigs.github.io/cluster-api-operator
+#     targetRevision: 0.14.0
+#     helm:
+#       releaseName: capi-operator
+#       valuesObject:
+#         infrastructure: "gcp"
+#         addon: helm
+#         cert-manager:
+#           enabled: "true"
+#         configSecret:
+#           name: credentials-secret
+#           namespace: capi-operator-system
+#       valueFiles:
+#       - values.yaml
+#   destination:
+#     server: "https://kubernetes.default.svc"
+#     namespace: capi-operator-system
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+#     syncOptions:
+#     - CreateNamespace=true
