@@ -8,7 +8,7 @@ spec:
   source:
     chart: capi-operator/cluster-api-operator
     repoURL: https://kubernetes-sigs.github.io/cluster-api-operator
-    targetRevision: v0.14.0
+    targetRevision: 0.14.0
     helm:
       releaseName: capi-operator
       valuesObject:
