@@ -14,7 +14,7 @@ spec:
     helm:
       releaseName: capi-operator
       valuesObject:
-        infrastructure: "gcp"
+        infrastructure: "gcp;azure"
         addon: helm
         cert-manager:
           enabled: "true"
