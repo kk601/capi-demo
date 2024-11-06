@@ -50,7 +50,7 @@ spec:
       apiServer:
         extraArgs:
           cloud-provider: external
-        timeoutForControlPlane: 20m
+        timeoutForControlPlane: 20m0s
       controllerManager:
         extraArgs:
           allocate-node-cidrs: "false"
